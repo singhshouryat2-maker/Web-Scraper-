@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Scraper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Smart Scraper</h1>
+      <p>Scrape data from the current tab</p>
+    </header>
+
+    <section class="controls">
+      <label for="scrapeType">Choose what to scrape</label>
+      <select id="scrapeType">
+        <option value="all">Everything</option>
+        <option value="title">Page Title</option>
+        <option value="headings">Headings</option>
+        <option value="links">Links</option>
+        <option value="images">Images</option>
+      </select>
+
+      <button id="scrapeBtn">Scrape Data</button>
+    </section>
+
+    <section class="actions">
+      <button id="copyBtn" class="secondary">Copy Result</button>
+      <button id="downloadBtn" class="secondary">Download JSON</button>
+      <button id="clearBtn" class="danger">Clear</button>
+    </section>
+
+    <section class="status-box">
+      <div id="status">Ready.</div>
+    </section>
+
+    <section class="result-box">
+      <pre id="result">No data yet.</pre>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
