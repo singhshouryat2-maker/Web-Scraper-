@@ -74,4 +74,37 @@ copyBtn.addEventListener("click", async () => {
     if (!latestData) {
       setStatus("Nothing to copy.");
       return;
-    }}}
+    }
+    await navigator.clipboard.writeText(JSON.stringify(latestData, null, 2));
+    setStatus("Result copied to clipboard.");
+  } catch (error) {
+    setStatus("Copy failed.");
+  }
+});
+
+downloadBtn.addEventListener("click", () => {
+  if (!latestData) {
+    setStatus("Nothing to download.");
+    return;
+  }
+
+  const blob = new Blob([JSON.stringify(latestData, null, 2)], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "scraped-data.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+  setStatus("Download started.");
+});
+
+clearBtn.addEventListener("click", () => {
+  latestData = null;
+  resultBox.textContent = "No data yet.";
+  setStatus("Cleared.");
+});
