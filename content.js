@@ -38,3 +38,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       count: headings.length,
       headings: headings
     };
+  } else if (scrapeType === "links") {
+    result = {
+      type: "links",
+      url: location.href,
+      count: links.length,
+      links: links
+    };
+  } else if (scrapeType === "images") {
+    result = {
+      type: "images",
+      url: location.href,
+      count: images.length,
+      images: images
+    };
+  } else if (scrapeType === "all") {
+    result = {
+      type: "all",
+      url: location.href,
+      title: title,
+      headingsCount: headings.length,
+      headings: headings,
+      linksCount: links.length,
+      links: links,
+      imagesCount: images.length,
+      images: images
+    };
+  }
+
+  sendResponse(result);
