@@ -97,28 +97,52 @@ scrapeBtn.addEventListener("click", async () => {
     setStatus("Fetching page...");
     scrapeBtn.disabled = true;
 
-    const response = await fetch(
-      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&json=callback`
-    );
+    // Try multiple CORS proxies for reliability
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch URL");
+    let html = null;
+    let lastError = null;
+
+    for (const proxyUrl of proxies) {
+      try {
+        const response = await fetch(proxyUrl, {
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          }
+        });
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        
+        if (data.contents) {
+          html = data.contents;
+        } else if (typeof data === 'string') {
+          html = data;
+        }
+        
+        if (html) break;
+      } catch (e) {
+        lastError = e;
+        continue;
+      }
     }
 
-    const data = await response.json();
-
-    if (data.status && data.status.code !== 200) {
-      throw new Error("Failed to fetch URL");
+    if (!html) {
+      throw new Error("Could not fetch the URL. The website may be blocking requests or is unavailable.");
     }
 
     setStatus("Scraping page...");
 
-    const scrapedData = scrapeContent(data.contents, scrapeType.value);
+    const scrapedData = scrapeContent(html, scrapeType.value);
     setResult(scrapedData);
     setStatus("Scraping complete.");
   } catch (error) {
     setStatus("Error: " + error.message);
-    resultBox.textContent = error.message;
+    resultBox.textContent = "Error: " + error.message + "\n\nTip: Some websites block scraping. Try a public website like Wikipedia or a news site.";
   } finally {
     scrapeBtn.disabled = false;
   }
