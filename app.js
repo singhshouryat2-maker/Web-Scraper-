@@ -105,32 +105,45 @@ scrapeBtn.addEventListener("click", async () => {
     setStatus("Fetching page...");
     scrapeBtn.disabled = true;
 
-    // Use local API endpoint (Vercel serverless function)
-    const apiUrl = window.location.hostname === 'localhost' 
-      ? `http://localhost:3000/api/scrape?url=${encodeURIComponent(url)}`
-      : `/api/scrape?url=${encodeURIComponent(url)}`;
+    let html = null;
 
-    const response = await fetch(apiUrl);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to fetch URL");
+    // Try backend API first (works on Vercel)
+    try {
+      const response = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.contents) {
+          html = data.contents;
+        }
+      }
+    } catch (e) {
+      // API not available, will try proxy
     }
 
-    const data = await response.json();
+    // Fallback to CORS proxy if API not available
+    if (!html) {
+      const response = await fetch(
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+      );
 
-    if (!data.contents) {
-      throw new Error("No content received from server");
+      if (response.ok) {
+        const data = await response.json();
+        html = data.contents;
+      }
+    }
+
+    if (!html) {
+      throw new Error("Could not fetch the URL. Try https://example.com or https://en.wikipedia.org");
     }
 
     setStatus("Scraping page...");
 
-    const scrapedData = scrapeContent(data.contents, scrapeType.value);
+    const scrapedData = scrapeContent(html, scrapeType.value);
     setResult(scrapedData);
     setStatus("Scraping complete.");
   } catch (error) {
     setStatus("Error: " + error.message);
-    resultBox.textContent = "Error: " + error.message + "\n\nTip: The website may be temporarily unavailable or blocking requests.";
+    resultBox.textContent = "Error: " + error.message;
   } finally {
     scrapeBtn.disabled = false;
   }
