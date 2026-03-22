@@ -93,56 +93,44 @@ scrapeBtn.addEventListener("click", async () => {
     return;
   }
 
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch (e) {
+    setStatus("Please enter a valid URL (e.g., https://example.com)");
+    return;
+  }
+
   try {
     setStatus("Fetching page...");
     scrapeBtn.disabled = true;
 
-    // Try multiple CORS proxies for reliability
-    const proxies = [
-      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    ];
+    // Use local API endpoint (Vercel serverless function)
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? `http://localhost:3000/api/scrape?url=${encodeURIComponent(url)}`
+      : `/api/scrape?url=${encodeURIComponent(url)}`;
 
-    let html = null;
-    let lastError = null;
+    const response = await fetch(apiUrl);
 
-    for (const proxyUrl of proxies) {
-      try {
-        const response = await fetch(proxyUrl, {
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-          }
-        });
-
-        if (!response.ok) continue;
-
-        const data = await response.json();
-        
-        if (data.contents) {
-          html = data.contents;
-        } else if (typeof data === 'string') {
-          html = data;
-        }
-        
-        if (html) break;
-      } catch (e) {
-        lastError = e;
-        continue;
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch URL");
     }
 
-    if (!html) {
-      throw new Error("Could not fetch the URL. The website may be blocking requests or is unavailable.");
+    const data = await response.json();
+
+    if (!data.contents) {
+      throw new Error("No content received from server");
     }
 
     setStatus("Scraping page...");
 
-    const scrapedData = scrapeContent(html, scrapeType.value);
+    const scrapedData = scrapeContent(data.contents, scrapeType.value);
     setResult(scrapedData);
     setStatus("Scraping complete.");
   } catch (error) {
     setStatus("Error: " + error.message);
-    resultBox.textContent = "Error: " + error.message + "\n\nTip: Some websites block scraping. Try a public website like Wikipedia or a news site.";
+    resultBox.textContent = "Error: " + error.message + "\n\nTip: The website may be temporarily unavailable or blocking requests.";
   } finally {
     scrapeBtn.disabled = false;
   }
