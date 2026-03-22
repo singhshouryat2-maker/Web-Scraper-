@@ -1,0 +1,13 @@
+{
+  "name": "smart-scraper",
+  "version": "1.0.0",
+  "description": "A web scraper application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "start": "python -m http.server 3000"
+  },
+  "keywords": ["scraper", "web"],
+  "author": "",
+  "license": "MIT"
+}
